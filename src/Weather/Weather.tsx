@@ -1,13 +1,17 @@
+import {forecastMetaShape} from "./types";
 import React from "react";
 import axios from "axios";
+import moment from "moment";
 import {
-  Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
   Container,
   Card,
   CardHeader,
   CardContent,
-  // CardActions,
-  // Box,
+  LinearProgress,
   Typography,
 } from "@mui/material";
 import Icon from "../Icon";
@@ -16,23 +20,15 @@ export function Weather() {
 
   const load = () => {
     if (!data && !loading){
-      console.log("load please");
-
-      // Make a request for a user with a given ID
+      setLoading(true);
       axios.get('https://api.listingslab.com/weather')
         .then(function (response) {
-          // handle success
-          console.log(response);
+          setData(response.data);
+          setLoading(false);
         })
         .catch(function (error) {
-          // handle error
-          console.log(error);
+          setData(error);
         })
-        .finally(function () {
-          // always executed
-        });
-
-
     }
     return false;
   };
@@ -40,32 +36,58 @@ export function Weather() {
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
 
-  // React.useEffect(() => {
-  //   console.log("render once. no redux")
-  // }, []);
+  React.useEffect(() => {
+    if(!data && !loading) load();
+  }, [data, loading]);
+  let forecastMeta: forecastMetaShape | null = null;
+  if(data){
+    forecastMeta = data.app;
+  }
 
   return (
     <>
       <Container maxWidth="sm">
         <Card>
+          {loading ? <LinearProgress /> : <Box sx={{height:4}}/> }
           <CardHeader 
             avatar={<Icon icon="rocket" />}
             title="Weather"
-            subheader="time now"
+            subheader={moment().format("dddd, MMMM Do YYYY, h:mm:ss a")}
           />
-          
+          { data ? null : null }
           <CardContent>
+            
             <Typography variant="body1">
-              Load latest weather data from https://api.listingslab.com/weather. This weather forecast is updated every day at 5am Malta time. Each update is a five day forecast 
+             
             </Typography>
+          </CardContent>
+          {data ? <Accordion>
+            <AccordionSummary
+              expandIcon={<Icon icon="expand" />}
+              aria-controls="data"
+            >
+              <Typography>forecastMeta</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <pre>{JSON.stringify(forecastMeta, null, 2)}</pre>
+            </AccordionDetails>
+          </Accordion> : null }
+          
 
-            <Typography variant="h6">
+        </Card>
+      </Container>
+    </>
+  )
+}
+
+/*
+
+<Typography variant="h6">
               Data
             </Typography>
 
-            <pre>{JSON.stringify(data, null, 2)}</pre>
 
-            <Button sx={{my:2}}
+{!loading && !data ? <Button sx={{my:2}}
               variant="contained"
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
@@ -75,13 +97,5 @@ export function Weather() {
               <span style={{marginLeft:8, marginRight:8}}>
                 Load weather
               </span>
-            </Button>
-
-
-          </CardContent>
-          
-        </Card>
-      </Container>
-    </>
-  )
-}
+            </Button> : null }
+*/
